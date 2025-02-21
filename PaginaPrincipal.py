@@ -91,7 +91,7 @@ def obtener_usuarios():
         usuarios = result.fetchall()
 
     conn.close()
-    return jsonify(usuarios)
+    return render_template('usuarios.html', usuarios=usuarios)
 
 if __name__ == '__main__':
     app.run(debug=True)

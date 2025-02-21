@@ -70,3 +70,23 @@ BEGIN
     DELETE FROM usuario WHERE nombre = u_nombre AND id_usuario = u_id_usuario;
 END &&
 DELIMITER ;
+
+DELIMITER $$
+CREATE PROCEDURE updateUser(
+    IN nombre VARCHAR(50),
+    IN rol VARCHAR(50),
+    IN telefono VARCHAR(50),
+    IN mail VARCHAR(50),
+    IN direccion VARCHAR(50),
+    IN u_id_usuario INT
+)
+BEGIN
+    UPDATE usuario
+    SET nombre = nombre,
+        rol = rol,
+        telefono = telefono,
+        mail = mail,
+        direccion = direccion
+    WHERE id_usuario = u_id_usuario;
+END $$
+DELIMITER ;
