@@ -1,19 +1,72 @@
 from connection_db import get_db_connection, secret_key
-from flask import Flask, jsonify, render_template, request, flash, redirect, url_for
+from flask import Flask, jsonify, render_template, request, flash, redirect, url_for, session
 import mysql.connector 
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = secret_key()
-
-#redirige al index de la pagina
-@app.route('/')
-def indexPage():
-    return render_template('indexPage.html')
 
 #redirige a la pagina que muestra los usuarios
 @app.route('/usuarios')
 def showUsers():
     return render_template('showUsers.html')
+
+@app.route('/indexPage')
+def indexPage():
+    if 'mail' not in session:
+        flash("Debes iniciar sesión para acceder a esta página.", "error")
+        return redirect(url_for('loginPage'))
+
+    return render_template('indexPage.html', nombre=session['nombre'])
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("Sesión cerrada exitosamente.", "success")
+    return redirect(url_for('loginPage'))
+
+#redirige al index de la pagina despues de validar las credenciales
+@app.route('/', methods=['GET', 'POST'])
+def loginPage():
+    if request.method == 'POST':
+        mail = request.form.get('mail')
+        passwd = request.form.get('contrasena')
+
+        if not mail or not passwd:
+            flash("Todos los datos deben ser ingresados", "error")
+            return render_template('login.html')
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.callproc('validateUser', [mail])
+
+            user = None
+            for result in cursor.stored_results():
+                user = result.fetchone()
+
+            if user and check_password_hash(user['contrasena'], passwd):
+                flash("Inicio de sesión exitoso", "success")
+                
+                session['mail'] = user['mail']
+                session['nombre'] = user['nombre']
+                session['rol'] = user['rol']
+                
+                return redirect(url_for('indexPage'))
+            else:
+                flash("Email o contraseña incorrectos", "error")
+
+        except mysql.connector.Error as error:
+            flash(f"Error en el inicio de sesión: {error}", "error")
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    return render_template('login.html')
+
 
 #Creacion de usuarios
 @app.route('/createUsers',methods=['GET','POST'])
@@ -23,15 +76,18 @@ def createUsers():
     telefono = request.form['telefono']
     mail = request.form['mail']
     direccion = request.form['direccion']
+    contrasena = request.form['contrasena']
     
-    if not nombre or not rol or not telefono or not mail or not direccion:
+    if not nombre or not rol or not telefono or not mail or not direccion or not contrasena:
         flash("Todos los campos son obligatorios.", "error")
         return redirect(url_for('readUsers'))
+    
+    hashed_password = generate_password_hash(contrasena)
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.callproc('insertUser1', [nombre, rol, telefono, mail, direccion]) 
+        cursor.callproc('insertUser', [nombre, rol, telefono, mail, direccion, hashed_password]) 
         conn.commit()
           
         flash("Usuario registrado correctamente.", "success")
@@ -82,15 +138,16 @@ def updateUsers():
     mail = request.form['mail']
     direccion = request.form['direccion']
     user_id = request.form['id']
+    contrasena = request.form['contrasena']
 
-    if not nombre or not rol or not telefono or not mail or not direccion:
+    if not nombre or not rol or not telefono or not mail or not direccion or not contrasena:
         flash("Todos los campos son obligatorios.", "error")
         return redirect(url_for('readUsers'))
     
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.callproc('updateUser', [user_id, nombre, rol, telefono, mail, direccion])
+        cursor.callproc('updateUser', [user_id, nombre, rol, telefono, mail, direccion, contrasena])
         conn.commit()
           
         flash("Usuario actualizado correctamente.", "success")
@@ -128,7 +185,6 @@ def deleteUsers(id):
         conn.close()
     
     return redirect(url_for('readUsers'))   
-
 
 if __name__ == '__main__':
     app.run(debug=True)

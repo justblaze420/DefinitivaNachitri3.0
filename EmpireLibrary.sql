@@ -2,42 +2,45 @@ create database EmpireLibrary;
 use EmpireLibrary;
 create table usuario(
 id_usuario int auto_increment primary key,
-nombre varchar(20),
+nombre varchar(50),
 rol varchar(20),
 telefono varchar (15),
-mail varchar(30),
+mail varchar(50),
 direccion varchar(50),
-contraseña varchar(50)
+contrasena varchar(50)
 )
 
+SELECT * from usuario;
+
+INSERT INTO usuario (nombre, rol, telefono, mail, direccion, contrasena) VALUES
+('Juan Pérez', 'Admin', '5551234567', 'juan.perez@example.com', 'Calle Falsa 123', 'juan123'),
+('María López', 'Usuario', '5552345678', 'maria.lopez@example.com', 'Avenida Siempre Viva 456', 'maria456'),
+('Carlos Sánchez', 'Usuario', '5553456789', 'carlos.sanchez@example.com', 'Boulevard de los Sueños Rotos 789', 'carlos789'),
+('Ana Torres', 'Usuario', '5554567890', 'ana.torres@example.com', 'Calle Luna 101', 'ana101'),
+('Luis Morales', 'Usuario', '5555678901', 'luis.morales@example.com', 'Avenida Sol 202', 'luis202'),
+('Sofía Ramírez', 'Admin', '5556789012', 'sofia.ramirez@example.com', 'Calle Estrella 303', 'sofia303'),
+('Pedro Gómez', 'Usuario', '5557890123', 'pedro.gomez@example.com', 'Avenida Libertad 404', 'pedro404'),
+('Laura Díaz', 'Usuario', '5558901234', 'laura.diaz@example.com', 'Calle Esperanza 505', 'laura505'),
+('Miguel Ruiz', 'Admin', '5559012345', 'miguel.ruiz@example.com', 'Boulevard Paz 606', 'miguel606'),
+('Elena Castro', 'Usuario', '5550123456', 'elena.castro@example.com', 'Avenida Justicia 707', 'elena707');
 
 create table ventas(
 id_ventas int auto_increment primary key,
-vendido_a_clientes int(10),
+vendido_a_clientes int(50),
 totales_vendidos int(10),
 FOREIGN KEY (vendido_a_clientes) REFERENCES usuario(id_usuario)
 )
 
+
 create table libros(
 id int auto_increment primary key,
 nombre varchar(50),
-autor varchar(20),
+autor varchar(50),
 año_publicacion int(10),
 stock int(10),
 genero varchar(30),
 estado varchar(20)
 )
-
-show full tables from EmpireLibrary;
-
-DESCRIBE ventas;
-
-INSERT INTO usuario (nombre, rol, telefono, mail, direccion) VALUES
-('Juan Perez', 'Admin', 5551234567, 'juan.perez@example.com', 'Calle Falsa 123'),
-('Maria Lopez', 'Usuario', 5552345678, 'maria.lopez@example.com', 'Avenida Siempre Viva 456'),
-('Carlos Sanchez', 'Usuario', 5553456789, 'carlos.sanchez@example.com', 'Boulevard de los Sueños Rotos 789'),
-('Ana Torres', 'Usuario', 5554567890, 'ana.torres@example.com', 'Calle Luna 101'),
-('Luis Morales', 'Usuario', 5555678901, 'luis.morales@example.com', 'Avenida Sol 202');
 
 INSERT INTO libros (nombre, autor, año_publicacion, stock, genero, estado) VALUES
 ('Cien años de soledad', 'Gabriel García Márquez', 1967, 10, 'Realismo mágico', 'Disponible'),
@@ -64,11 +67,6 @@ INSERT INTO libros (nombre, autor, año_publicacion, stock, genero, estado) VALU
 select * from usuario;
 select * from libros;
 select * from ventas;
-
-ALTER TABLE libros
-MODIFY COLUMN autor VARCHAR(50);
-
-#Usuarios 
 DELIMITER //
 CREATE PROCEDURE GetAllUsers()
 BEGIN
@@ -77,15 +75,16 @@ END //
 DELIMITER ;
 
 DELIMITER $$
-CREATE PROCEDURE insertUser1(
+CREATE PROCEDURE insertUser(
     IN nombre VARCHAR(50),
     IN rol VARCHAR(50),
     IN telefono VARCHAR(50),
     IN mail VARCHAR(50),
-    IN direccion VARCHAR(50)
+    IN direccion VARCHAR(50),
+    IN contrasena VARCHAR(255)
     )
 BEGIN
-    INSERT INTO usuario(nombre, rol, telefono, mail, direccion) VALUES (nombre, rol, telefono, mail, direccion);
+    INSERT INTO usuario(nombre, rol, telefono, mail, direccion,contrasena) VALUES (nombre, rol, telefono, mail, direccion, contrasena);
 END $$
 DELIMITER ;
 
@@ -99,37 +98,15 @@ BEGIN
 END &&
 DELIMITER ;
 
-#Libros
-DELIMITER //
-CREATE PROCEDURE GetAllBooks()
-BEGIN
-    SELECT * FROM libros;
-END //
-DELIMITER ;
-
 DELIMITER $$
-CREATE PROCEDURE insertBook1(
-    IN nombre VARCHAR(50),
-    IN autor VARCHAR(50),
-    IN año_publicacion VARCHAR(50),
-    IN stock VARCHAR(50),
-    IN genero VARCHAR(50),
-    IN estado VARCHAR(20)
-    )
-BEGIN
-    INSERT INTO libros(nombre, autor, año_publicacion, stock, genero, estado) VALUES (nombre, autor, año_publicacion, stock, genero, estado);
-END $$
-DELIMITER ;
-
-DELIMITER $$
-
 CREATE PROCEDURE updateUser(
     IN p_id INT,
     IN p_nom VARCHAR(50),
     IN p_rol VARCHAR(50),
     IN p_tel VARCHAR(50),
     IN p_mail VARCHAR(50),
-    IN p_add VARCHAR(50)
+    IN p_add VARCHAR(50),
+    IN p_pass VARCHAR(255)
 )
 BEGIN
     UPDATE usuario 
@@ -137,17 +114,21 @@ BEGIN
         rol = p_rol, 
         telefono = p_tel, 
         mail = p_mail, 
-        direccion = p_add
+        direccion = p_add,
+        contrasena = p_pass
     WHERE id_usuario = p_id;
 END $$
 
 DELIMITER ;
 
-DELIMITER $$
-CREATE PROCEDURE GetUserById(
-    IN p_id INT
-)
+DELIMITER &&
+CREATE PROCEDURE validateUser(IN p_mail VARCHAR(255))
 BEGIN
-    SELECT * FROM usuario WHERE id_usuario = p_id;
-END $$
+    SELECT nombre, rol, telefono, mail, direccion, contrasena 
+    FROM usuario
+    WHERE mail = p_mail;
+END //
 DELIMITER ;
+
+DROP Procedure `validateUser`
+
