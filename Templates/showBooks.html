@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Libros</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script>
+        function openEditModal(id, nombre, autor, año_publicacion, stock, genero, fecha_pub, estado) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editNombre').value = nombre;
+            document.getElementById('editAutor').value = autor;
+            document.getElementById('editAñoPublicacion').value = año_publicacion;
+            document.getElementById('editStock').value = stock;
+            document.getElementById('editGenero').value = genero;
+            document.getElementById('editFechaPub').value = fecha_pub;
+            document.getElementById('editEstado').value = estado;
+            var myModal = new bootstrap.Modal(document.getElementById('editModal'));
+            myModal.show();
+        }
+
+        function confirmDelete(id, nombre) {
+            let userInput = prompt("Escribe el nombre del libro para confirmar la eliminación:");
+            if (userInput === nombre) {
+                let numericId = parseInt(id, 10);
+                if (!isNaN(numericId)) {
+                    window.location.href = `/deleteBooks/${numericId}`;
+                } else {
+                    alert("ID inválido. Eliminación cancelada.");
+                }
+            } else {
+                alert("El nombre ingresado no coincide. Eliminación cancelada.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container mt-5">
+        <!-- Jumbotron centrado -->
+        <div class="jumbotron text-center mb-5">
+            <h1 class="display-4">Lista de Libros</h1>
+            <p class="lead">Administra todos los libros en el sistema de manera fácil y rápida.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Formulario para crear libro -->
+        <div class="card mb-4 shadow-lg">
+            <div class="card-header text-center bg-primary text-white">
+                <h4>Agregar Nuevo Libro</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/createBooks">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre del Libro</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="autor" class="form-label">Autor</label>
+                        <input type="text" class="form-control" id="autor" name="autor" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="año_publicacion" class="form-label">Año de Publicación</label>
+                        <input type="number" class="form-control" id="año_publicacion" name="año_publicacion" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="stock" class="form-label">Stock</label>
+                        <input type="number" class="form-control" id="stock" name="stock" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="genero" class="form-label">Género</label>
+                        <input type="text" class="form-control" id="genero" name="genero" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fecha_pub" class="form-label">Fecha de Publicación</label>
+                        <input type="date" class="form-control" id="fecha_pub" name="fecha_pub" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <input type="text" class="form-control" id="estado" name="estado" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Registrar Libro</button>
+                </form>
+            </div>
+        </div>
+
+        {% if libros %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped shadow-sm">
+                <thead class="bg-primary text-white text-center">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Autor</th>
+                        <th>Año de Publicación</th>
+                        <th>Stock</th>
+                        <th>Género</th>
+                        <th>Fecha de Publicación</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for libro in libros %}
+                    <tr>
+                        <td>{{ libro.id }}</td>
+                        <td>{{ libro.nombre }}</td>
+                        <td>{{ libro.autor }}</td>
+                        <td>{{ libro.año_publicacion }}</td>
+                        <td>{{ libro.stock }}</td>
+                        <td>{{ libro.genero }}</td>
+                        <td>{{ libro.fecha_pub }}</td>
+                        <td>{{ libro.estado }}</td>
+                        <td class="text-center">
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal('{{ libro.id }}', '{{ libro.nombre }}', '{{ libro.autor }}', '{{ libro.año_publicacion }}', '{{ libro.stock }}', '{{ libro.genero }}', '{{ libro.fecha_pub }}', '{{ libro.estado }}')">Editar</button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ libro.id }}', '{{ libro.nombre }}')">Eliminar</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning text-center">No hay libros disponibles.</div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-secondary">Volver al Inicio</a>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Libro -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Libro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="/updateBooks">
+                        <input type="hidden" id="editId" name="id">
+                        <div class="mb-3">
+                            <label for="editNombre" class="form-label">Nombre del Libro</label>
+                            <input type="text" class="form-control" id="editNombre" name="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAutor" class="form-label">Autor</label>
+                            <input type="text" class="form-control" id="editAutor" name="autor" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAñoPublicacion" class="form-label">Año de Publicación</label>
+                            <input type="number" class="form-control" id="editAñoPublicacion" name="año_publicacion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStock" class="form-label">Stock</label>
+                            <input type="number" class="form-control" id="editStock" name="stock" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editGenero" class="form-label">Género</label>
+                            <input type="text" class="form-control" id="editGenero" name="genero" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editFechaPub" class="form-label">Fecha de Publicación</label>
+                            <input type="date" class="form-control" id="editFechaPub" name="fecha_pub" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEstado" class="form-label">Estado</label>
+                            <input type="text" class="form-control" id="editEstado" name="estado" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

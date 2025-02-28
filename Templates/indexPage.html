@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empire Library</title>
+</head>
+<body>
+    <h1 align="center">Empire Library</h1>
+
+    {% if session['rol'] == 'Admin' %}
+        <form align="center">
+            <button type="button" onclick="location.href='/readUsers'">Mostrar Usuarios</button>
+            <br><br>
+            <button type="button" onclick="location.href='/createUsers'">Crear Usuarios</button>
+            <br><br>
+            <button type="button" onclick="location.href='/libros'">Administrar Libros</button>
+            <br><br>
+            <button type="button" onclick="location.href='/ruta3'">Botón 3</button>
+            <br><br>
+        </form>
+    {% elif session['rol'] == 'Usuario' %}
+        <form align="center">
+            <button type="button" onclick="location.href='/ruta4'">Botón 4</button>
+            <br><br>
+            <button type="button" onclick="location.href='/ruta5'">Botón 5</button>
+        </form>
+    {% else %}
+        <p align="center">No tienes acceso a esta página.</p>
+    {% endif %}
+
+    <!-- Cerrar sesión -->
+    <div align="center">
+        <button type="button" onclick="location.href='/logout'">Cerrar Sesión</button>
+    </div>
+</body>
+</html>
