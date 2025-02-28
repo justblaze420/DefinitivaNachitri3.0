@@ -13,24 +13,42 @@
             document.getElementById('editTelefono').value = telefono;
             document.getElementById('editMail').value = mail;
             document.getElementById('editDireccion').value = direccion;
-            document.getElementById('editContrasena').value = contrasena
+            document.getElementById('editContrasena').value = contrasena;
             var myModal = new bootstrap.Modal(document.getElementById('editModal'));
             myModal.show();
         }
 
         function confirmDelete(id, nombre) {
-            let userInput = prompt("Escribe el nombre del usuario para confirmar la eliminación:");
-            if (userInput === nombre) {
-                let numericId = parseInt(id, 10);
-                if (!isNaN(numericId)) {
-                    window.location.href = `/deleteUsers/${numericId}`;
-                } else {
-                    alert("ID inválido. Eliminación cancelada.");
-                }
-            } else {
-                alert("El nombre ingresado no coincide. Eliminación cancelada.");
-            }
-        }
+    let userInput = prompt("Escribe el nombre del usuario para confirmar la eliminación:");
+    if (userInput === nombre) {
+        // Crear un formulario dinámico para enviar por POST
+        let form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/delete';
+        
+        // Crear campo oculto para el ID
+        let idField = document.createElement('input');
+        idField.type = 'hidden';
+        idField.name = 'id_usuario';
+        idField.value = id;
+        
+        // Crear campo oculto para el nombre
+        let nombreField = document.createElement('input');
+        nombreField.type = 'hidden';
+        nombreField.name = 'nombre';
+        nombreField.value = nombre;
+        
+        // Añadir campos al formulario
+        form.appendChild(idField);
+        form.appendChild(nombreField);
+        
+        // Añadir formulario al documento y enviarlo
+        document.body.appendChild(form);
+        form.submit();
+    } else {
+        alert("El nombre ingresado no coincide. Eliminación cancelada.");
+    }
+}
     </script>
 </head>
 <body>
@@ -105,7 +123,7 @@
                     <td>{{ usuario.direccion }}</td>
                     <td>{{ usuario.contrasena }}</td>
                     <td>
-                        <button class="btn btn-warning btn-sm" onclick="openEditModal('{{ usuario.id_usuario }}', '{{ usuario.nombre }}', '{{ usuario.rol }}', '{{ usuario.telefono }}', '{{ usuario.mail }}', '{{ usuario.direccion }}')">Editar</button>
+                        <button class="btn btn-warning btn-sm" onclick="openEditModal('{{ usuario.id_usuario }}', '{{ usuario.nombre }}', '{{ usuario.rol }}', '{{ usuario.telefono }}', '{{ usuario.mail }}', '{{ usuario.direccion }}', '{{ usuario.contrasena }}')">Editar</button>
                         <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ usuario.id_usuario }}', '{{ usuario.nombre }}')">Eliminar</button>
                     </td>
                 </tr>
