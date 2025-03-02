@@ -7,22 +7,15 @@ rol varchar(20),
 telefono varchar (15),
 mail varchar(50),
 direccion varchar(50),
-contrasena varchar(50)
+contrasena varchar(255)
 )
 
 SELECT * from usuario;
 
 INSERT INTO usuario (nombre, rol, telefono, mail, direccion, contrasena) VALUES
-('Juan Pérez', 'Admin', '5551234567', 'juan.perez@example.com', 'Calle Falsa 123', 'juan123'),
-('María López', 'Usuario', '5552345678', 'maria.lopez@example.com', 'Avenida Siempre Viva 456', 'maria456'),
-('Carlos Sánchez', 'Usuario', '5553456789', 'carlos.sanchez@example.com', 'Boulevard de los Sueños Rotos 789', 'carlos789'),
-('Ana Torres', 'Usuario', '5554567890', 'ana.torres@example.com', 'Calle Luna 101', 'ana101'),
-('Luis Morales', 'Usuario', '5555678901', 'luis.morales@example.com', 'Avenida Sol 202', 'luis202'),
-('Sofía Ramírez', 'Admin', '5556789012', 'sofia.ramirez@example.com', 'Calle Estrella 303', 'sofia303'),
-('Pedro Gómez', 'Usuario', '5557890123', 'pedro.gomez@example.com', 'Avenida Libertad 404', 'pedro404'),
-('Laura Díaz', 'Usuario', '5558901234', 'laura.diaz@example.com', 'Calle Esperanza 505', 'laura505'),
-('Miguel Ruiz', 'Admin', '5559012345', 'miguel.ruiz@example.com', 'Boulevard Paz 606', 'miguel606'),
-('Elena Castro', 'Usuario', '5550123456', 'elena.castro@example.com', 'Avenida Justicia 707', 'elena707');
+('Admin', 'Admin', '0000000000', 'admin@admin.com', 'admin', 'scrypt:32768:8:1$MuF28AmBUXUABGw4$ac657f1aa6d9c7a77cb851b6343da00d77d5462c84d1feffe4e5802c665b98edd3ced73a4c0337f96711b0ce71a8ffd8a8ab0d20b2e3c3b2b1a8e3c894026606'),
+('Usuario', 'Usuario', '999999999', 'usuario@usuario.com', 'usuario', 'scrypt:32768:8:1$fRvdWlmIEFFOPQnw$8e108af2e3317242ebadf28f01430430bbe7a94ab3a99a0a5a3115de762ac990e60d352ddfe38c75d5de69d12fd61380a2d0e4e60bef926cd3d0e109e65d12f0'),
+
 
 create table ventas(
 id_ventas int auto_increment primary key,
@@ -33,7 +26,7 @@ FOREIGN KEY (vendido_a_clientes) REFERENCES usuario(id_usuario)
 
 
 create table libros(
-id int auto_increment primary key,
+id_libro int auto_increment primary key,
 nombre varchar(50),
 autor varchar(50),
 ano_publicacion int(10),
@@ -43,7 +36,14 @@ fecha_pub DATE,
 estado varchar(20)
 )
 
+DESC libros;
+
+
 alter table libros add COLUMN fecha_pub DATE;
+
+ALTER TABLE libros 
+MODIFY fecha_pub DATETIME DEFAULT CURRENT_TIMESTAMP;
+
 
 INSERT INTO libros (nombre, autor, ano_publicacion, stock, genero, fecha_pub, estado) VALUES
 ('Cien años de soledad', 'Gabriel García Márquez', 1967, 10, 'Realismo mágico', '2024-01-15', 'Disponible'),
@@ -120,7 +120,9 @@ drop Procedure `updateUser`
 DELIMITER ;
 
 DELIMITER &&
-CREATE PROCEDURE validateUser(IN p_mail VARCHAR(255))
+CREATE PROCEDURE validateUser(
+    IN p_mail VARCHAR(255)
+    )
 BEGIN
     SELECT nombre, rol, telefono, mail, direccion, contrasena 
     FROM usuario
@@ -155,7 +157,7 @@ CREATE PROCEDURE updateLibro(
     IN p_id INT,
     IN p_nombre VARCHAR(50),
     IN p_autor VARCHAR(50),
-    IN p_año_publicacion INT,
+    IN p_ano_publicacion INT,
     IN p_stock INT,
     IN p_genero VARCHAR(30),
     IN p_fecha_pub DATE,
@@ -165,25 +167,59 @@ BEGIN
     UPDATE libros
     SET nombre = p_nombre, 
         autor = p_autor, 
-        año_publicacion = p_año_publicacion, 
+        ano_publicacion = p_ano_publicacion, 
         stock = p_stock, 
         genero = p_genero, 
         fecha_pub = p_fecha_pub, 
         estado = p_estado
-    WHERE id = p_id;
+    WHERE id_libro = p_id;
+END //
+DELIMITER ;
+
+drop Procedure `updateLibro`
+
+DELIMITER //
+CREATE PROCEDURE deleteLibro(
+    IN p_id INT
+)
+BEGIN
+    DELETE FROM libros WHERE id_libro = p_id;
+END //
+DELIMITER ;
+
+-- Procedimiento para actualizar los datos del usuario sin cambiar la contraseña
+DELIMITER //
+CREATE PROCEDURE actualizarUsuarioDatos(
+    IN p_mail VARCHAR(100),
+    IN p_nombre VARCHAR(100),
+    IN p_direccion VARCHAR(255),
+    IN p_telefono VARCHAR(20)
+)
+BEGIN
+    UPDATE usuario
+    SET nombre = p_nombre, 
+        direccion = p_direccion, 
+        telefono = p_telefono
+    WHERE mail = p_mail;
 END //
 DELIMITER ;
 
 DELIMITER //
-CREATE PROCEDURE deleteLibro(
-    IN p_nombre VARCHAR(50),
-    IN p_id INT
+CREATE PROCEDURE actualizarUsuarioCompleto(
+    IN p_mail VARCHAR(100),
+    IN p_nombre VARCHAR(100),
+    IN p_direccion VARCHAR(255),
+    IN p_telefono VARCHAR(20),
+    IN p_contrasena VARCHAR(255)
 )
 BEGIN
-    DELETE FROM libros
-    WHERE nombre = p_nombre AND id = p_id;
+    UPDATE usuario
+    SET nombre = p_nombre, 
+        direccion = p_direccion, 
+        telefono = p_telefono, 
+        contrasena = p_contrasena
+    WHERE mail = p_mail;
 END //
 DELIMITER ;
 
-DROP Procedure 
 

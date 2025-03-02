@@ -14,14 +14,14 @@
             <br><br>
             <button type="button" onclick="location.href='/createUsers'">Crear Usuarios</button>
             <br><br>
-            <button type="button" onclick="location.href='/showBooks'">Mostrar libros (esta en pruebita)</button>
+            <button type="button" onclick="location.href='/readBooks'">Mostrar libros (esta en pruebita)</button>
             <br><br>
         </form>
-    {% elif session['rol'] == 'Usuario' %}
+    {% elif session['rol'] != 'Admin' %}
         <form align="center">
-            <button type="button" onclick="location.href='/showBooks'">Ver libros</button>
+            <button type="button" onclick="location.href='/readBooks'">Ver libros</button>
             <br><br>
-            <button type="button" onclick="location.href='/ruta5'">Botón 5</button>
+            <button type="button" onclick="location.href='/userConfig'">Botón 5</button>
         </form>
     {% else %}
         <p align="center">No tienes acceso a esta página.</p>

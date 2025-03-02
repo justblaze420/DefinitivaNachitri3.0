@@ -24,7 +24,7 @@
         // Crear un formulario dinámico para enviar por POST
         let form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/delete';
+        form.action = '/deleteUsers';
         
         // Crear campo oculto para el ID
         let idField = document.createElement('input');
@@ -134,7 +134,7 @@
         <div class="alert alert-warning">No hay usuarios disponibles.</div>
         {% endif %}
 
-        <a href="/" class="btn btn-secondary">Volver al Inicio</a>
+        <a href="/indexPage" class="btn btn-secondary">Volver al Inicio</a>
     </div>
 
     <!-- Modal para Editar Usuario -->
