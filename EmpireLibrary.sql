@@ -57,8 +57,26 @@ INSERT INTO libros (nombre, autor, ano_publicacion, stock, genero, fecha_pub, es
 ('It', 'Stephen King', 1986, 4, 'Terror', '2024-01-25', 'Disponible'),
 ('Orgullo y prejuicio', 'Jane Austen', 1813, 9, 'Romance', '2023-11-18', 'Disponible');
 
+CREATE TABLE ratings (
+    id_rating INT AUTO_INCREMENT PRIMARY KEY,  -- ID único para cada rating
+    idLibro INT,
+    rating INT CHECK (rating BETWEEN 1 AND 5),  -- Asegura valores válidos (1-5)
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Guarda la fecha y hora del rating
+    FOREIGN KEY (idLibro) REFERENCES libros(id_libro) ON DELETE CASCADE
+);
 
-drop table libros
+
+drop table ratings;
+
+INSERT INTO ratings (idLibro, rating) VALUES 
+(1, 5), (2, 4), (3, 3), (4, 5), (5, 2), 
+(1, 4), (2, 5), (3, 2), (4, 1), (5, 3), 
+(6, 4), (7, 5), (8, 3), (9, 2), (10, 5), 
+(6, 2), (7, 4), (8, 1), (9, 5), (10, 3);
+
+SELECT AVG(rating)
+FROM ratings
+WHERE idLibro = 9;
 
 select * from usuario;
 select * from libros;
@@ -220,6 +238,16 @@ BEGIN
         contrasena = p_contrasena
     WHERE mail = p_mail;
 END //
-DELIMITER ;
+DELIMITER;
 
+DELIMITER //
 
+CREATE PROCEDURE listar_libros_con_ratings()
+BEGIN
+    SELECT l.id_libro, l.nombre, AVG(r.rating) AS promedio_rating
+    FROM libros l
+    LEFT JOIN ratings r ON l.id_libro = r.idLibro
+    GROUP BY l.id_libro, l.nombre;
+END //
+
+DELIMITER;

@@ -402,5 +402,53 @@ def userConfig():
                           telefono=session.get('telefono', ''),
                           mail=session.get('mail', ''))
 
+@app.route('/bookRatings', methods=['GET'])
+def bookRatings():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    libros = []
+
+    try:
+        cursor.callproc('bookRatings')
+        
+        for result in cursor.stored_results():
+            libros = result.fetchall()
+
+    except mysql.connector.Error as error:
+        print(f"Error MySQL: {error}")
+        libros = []
+
+    finally:
+        cursor.close()
+        conn.close()
+        
+    return render_template('bookRatings.html', libros = libros)
+
+@app.route('/bookRating', methods=['POST'])
+def bookRating():
+    id_libro = request.form['id_libro']
+    rating = request.form['rating']
+    
+    try:
+        rating = int(rating)
+        if rating < 1 or rating > 5:
+            flash("El rating debe estar entre 1 y 5.", "error")
+            return redirect(url_for('bookRatings'))
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO ratings (idLibro, rating) VALUES (%s, %s)", (id_libro, rating))
+        conn.commit()
+        flash("Rating agregado con éxito.", "success")
+
+    except mysql.connector.Error as error:
+        flash(f"Error al agregar el rating: {error}", "error")
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('bookRatings'))
+
 if __name__ == '__main__':
     app.run(debug=True)

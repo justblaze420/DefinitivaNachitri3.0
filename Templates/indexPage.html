@@ -12,16 +12,20 @@
         <form align="center">
             <button type="button" onclick="location.href='/readUsers'">Mostrar Usuarios</button>
             <br><br>
-            <button type="button" onclick="location.href='/createUsers'">Crear Usuarios</button>
+            <button type="button" onclick="location.href='/readBooks'">Mostrar libros</button>
             <br><br>
-            <button type="button" onclick="location.href='/readBooks'">Mostrar libros (esta en pruebita)</button>
+            <br><br>
+            <button type="button" onclick="location.href='/bookRatings'">Ratings de los libros</button>
             <br><br>
         </form>
     {% elif session['rol'] != 'Admin' %}
         <form align="center">
             <button type="button" onclick="location.href='/readBooks'">Ver libros</button>
             <br><br>
-            <button type="button" onclick="location.href='/userConfig'">Botón 5</button>
+            <button type="button" onclick="location.href='/userConfig'">configuraciones de usuario</button>
+            <br><br>
+            <button type="button" onclick="location.href='/readBooks'">Mostrar libros</button>
+            <br><br>
         </form>
     {% else %}
         <p align="center">No tienes acceso a esta página.</p>
