@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="jumbotron text-center mb-5">
+            <h1 class="display-4">Carrito de Compras</h1>
+            <p class="lead">Revisa los libros que has añadido a tu carrito</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% if carrito %}
+        <table class="table table-bordered table-striped shadow-sm">
+            <thead class="bg-primary text-white text-center">
+                <tr>
+                    <th>Nombre</th>
+                    <th>Autor</th>
+                    <th>Género</th>
+                    <th>Año de Publicación</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Precio Total</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in carrito %}
+                <tr>
+                    <td>{{ item[3] }}</td> <!-- Nombre del libro -->
+                    <td>{{ item[4] }}</td> <!-- Autor -->
+                    <td>{{ item[5] }}</td> <!-- Género -->
+                    <td>{{ item[6] }}</td> <!-- Año de Publicación -->
+                    <td>{{ item[7] }}</td> <!-- Cantidad -->
+                    <td>{{ item[8] }}</td> <!-- Precio Unitario -->
+                    <td>{{ item[9] }}</td> <!-- Precio Total -->
+                    <td>{{ item[2] }}</td>
+                    <td class="text-center">
+                        <form method="post" action="/removeFromCart" style="display:inline;">
+                            <input type="hidden" name="id_libro" value="{{ item[2] }}">
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                onclick="return confirm('¿Seguro que quieres eliminar este libro?')">Eliminar</button>
+
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="alert alert-warning text-center">Tu carrito está vacío.</div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="/readBooks" class="btn btn-primary">Seguir comprando</a>
+            <a href="/checkout" class="btn btn-success">Finalizar compra</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

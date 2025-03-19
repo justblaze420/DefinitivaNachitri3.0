@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Libros</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script>
-        function openEditModal(id, nombre, autor, año_publicacion, stock, genero, fecha_pub, estado) {
+        function openEditModal(id, nombre, autor, ano_publicacion, stock, precio, genero, fecha_pub, estado) {
+            console.log("Abriendo modal con datos:", id, nombre, autor, ano_publicacion, stock, precio, genero, fecha_pub, estado);
             document.getElementById('editId').value = id;
             document.getElementById('editNombre').value = nombre;
             document.getElementById('editAutor').value = autor;
-            document.getElementById('editAñoPublicacion').value = año_publicacion;
+            document.getElementById('editAnoPublicacion').value = ano_publicacion;
             document.getElementById('editStock').value = stock;
+            document.getElementById('editPrecio').value = precio;
             document.getElementById('editGenero').value = genero;
             document.getElementById('editFechaPub').value = fecha_pub;
             document.getElementById('editEstado').value = estado;
@@ -19,7 +22,7 @@
             myModal.show();
         }
 
-        function confirmDelete(id_libro, nombre) { 
+        function confirmDelete(id_libro, nombre) {
             let userInput = prompt("Escribe el nombre del libro para confirmar la eliminación:");
             if (userInput === nombre) {
                 fetch('/deleteBook', {
@@ -31,7 +34,7 @@
                 }).then(response => {
                     if (response.ok) {
                         alert("Libro exitosamente eliminado")
-                        window.location.reload(); 
+                        window.location.reload();
                     } else {
                         alert("Error al eliminar el libro.");
                     }
@@ -41,20 +44,35 @@
             }
         }
     </script>
+
+<script>
+    function openAddToCartModal(id, nombre, stock, precio) {
+    console.log("Abriendo modal para añadir al carrito:", id, nombre, stock, precio);
+    document.getElementById('addToCartId').value = id;
+    document.getElementById('addToCartNombre').value = nombre;
+    document.getElementById('addToCartCantidad').max = stock;
+    document.getElementById('addToCartPrecio').value = precio; 
+    var myModal = new bootstrap.Modal(document.getElementById('addToCartModal'));
+    myModal.show();
+}
+
+    </script>
 </head>
+<body>
+
 <body>
     <div class="container mt-5">
         <!-- Jumbotron centrado -->
         <div class="jumbotron text-center mb-5">
             <h1 class="display-4">Lista de Libros</h1>
-            <p class="lead">Administra todos los libros en el sistema de manera fácil y rápida.</p>
+            <p class="lead">Bienvenido a EmpireLibrary la libreria oficial de la gente que no quiere ser descubierta</p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
         {% endif %}
         {% endwith %}
 
@@ -75,20 +93,28 @@
                         <input type="text" class="form-control" id="autor" name="autor" required>
                     </div>
                     <div class="mb-3">
-                        <label for="año_publicacion" class="form-label">Año de Publicación</label>
-                        <input type="number" class="form-control" id="año_publicacion" name="año_publicacion" required>
+                        <label for="ano_publicacion" class="form-label">Año de Publicación</label>
+                        <input type="number" class="form-control" id="ano_publicacion" name="ano_publicacion" min="1800"
+                            max="2023" required>
                     </div>
                     <div class="mb-3">
                         <label for="stock" class="form-label">Stock</label>
-                        <input type="number" class="form-control" id="stock" name="stock" required>
+                        <input type="number" class="form-control" id="stock" name="stock" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="precio" class="form-label">Precio</label>
+                        <input type="number" class="form-control" id="precio" name="precio" min="0" required>
                     </div>
                     <div class="mb-3">
                         <label for="genero" class="form-label">Género</label>
                         <input type="text" class="form-control" id="genero" name="genero" required>
                     </div>
                     <div class="mb-3">
-                        <label for="estado" class="form-label">Estado</label>
-                        <input type="text" class="form-control" id="estado" name="estado" required>
+                        <label for="genero" class="form-label">Estado</label>
+                        <select class="form-control" id="editEstado" name="estado" required>
+                            <option value="Disponible">Disponible</option>
+                            <option value="No disponible">No disponible</option>
+                        </select>
                     </div>
                     <button type="submit" class="btn btn-success w-100">Registrar Libro</button>
                 </form>
@@ -106,11 +132,14 @@
                         <th>Autor</th>
                         <th>Año de salida</th>
                         <th>Stock</th>
+                        <th>Precio</th>
                         <th>Género</th>
                         <th>Fecha de publicacion</th>
                         <th>Disponibilidad</th>
                         {% if session['rol'] == 'Admin' %}
                         <th>Acciones</th>
+                        {% else %}
+                        <th>Añadir al carrito</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -121,19 +150,28 @@
                         <td>
                             {{ libro.nombre }}
                             {% if libro.es_nuevo %}
-                                <span class="badge bg-success">Nuevo</span>
+                            <span class="badge bg-success">Nuevo</span>
                             {% endif %}
                         </td>
                         <td>{{ libro.autor }}</td>
                         <td>{{ libro.ano_publicacion }}</td>
                         <td>{{ libro.stock }}</td>
+                        <td>{{ libro.precio }}</td>
                         <td>{{ libro.genero }}</td>
                         <td>{{ libro.fecha_pub.strftime('%d/%m/%Y') }}</td>
                         <td>{{ libro.estado }}</td>
                         {% if session['rol'] == 'Admin' %}
                         <td class="text-center">
-                            <button class="btn btn-warning btn-sm" onclick="openEditModal('{{ libro.id_libro }}', '{{ libro.nombre }}', '{{ libro.autor }}', '{{ libro.año_publicacion }}', '{{ libro.stock }}', '{{ libro.genero }}', '{{ libro.fecha_pub }}', '{{ libro.estado }}')">Editar</button>
-                            <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ libro.id_libro }}', '{{ libro.nombre }}')">Eliminar</button>
+                            <button class="btn btn-warning btn-sm"
+                                onclick="openEditModal('{{ libro.id_libro }}', '{{ libro.nombre }}', '{{ libro.autor }}', '{{ libro.ano_publicacion }}', '{{ libro.stock }}', '{{ libro.precio }}', '{{ libro.genero }}', '{{ libro.fecha_pub.strftime('%Y-%m-%d') }}', '{{ libro.estado }}')">Editar</button>
+                            <button class="btn btn-danger btn-sm"
+                                onclick="confirmDelete('{{ libro.id_libro }}', '{{ libro.nombre }}')">Eliminar</button>
+                        </td>
+                        {% else %}
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-sm"
+                                onclick="openAddToCartModal('{{ libro.id_libro }}', '{{ libro.nombre }}', '{{ libro.stock }}', '{{ libro.precio }}')">Añadir
+                                al carrito</button>
                         </td>
                         {% endif %}
                     </tr>
@@ -141,12 +179,14 @@
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div class="alert alert-warning text-center">No hay libros disponibles.</div>
         {% endif %}
 
         <div class="text-center mt-4">
             <a href="/indexPage" class="btn btn-secondary">Volver al Inicio</a>
+            <div class="text-center mt-4">
+                <a href="/indexPage" class="btn btn-secondary">Volver al Inicio</a>
+                <a href="/cart" class="btn btn-primary">Ver Carrito</a>
+            </div>
         </div>
     </div>
 
@@ -171,12 +211,17 @@
                             <input type="text" class="form-control" id="editAutor" name="autor" required>
                         </div>
                         <div class="mb-3">
-                            <label for="editAñoPublicacion" class="form-label">Año de Publicación</label>
-                            <input type="number" class="form-control" id="editAñoPublicacion" name="año_publicacion" required>
+                            <label for="editAnoPublicacion" class="form-label">Año de Publicación</label>
+                            <input type="number" class="form-control" id="editAnoPublicacion" name="ano_publicacion"
+                                required>
                         </div>
                         <div class="mb-3">
                             <label for="editStock" class="form-label">Stock</label>
                             <input type="number" class="form-control" id="editStock" name="stock" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPrecio" class="form-label">Precio</label>
+                            <input type="number" class="form-control" id="editPrecio" name="precio" required>
                         </div>
                         <div class="mb-3">
                             <label for="editGenero" class="form-label">Género</label>
@@ -184,7 +229,14 @@
                         </div>
                         <div class="mb-3">
                             <label for="editEstado" class="form-label">Estado</label>
-                            <input type="text" class="form-control" id="editEstado" name="estado" required>
+                            <select class="form-control" id="editEstado" name="estado" required>
+                                <option value="Disponible">Disponible</option>
+                                <option value="No disponible">No disponible</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editFechaPub" class="form-label">Fecha de Publicación</label>
+                            <input type="date" class="form-control" id="editFechaPub" name="fecha_pub">
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
                     </form>
@@ -193,7 +245,42 @@
         </div>
     </div>
     {% endif %}
-
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("Página cargada");
+        });
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Modal para Añadir al Carrito -->
+    <div class="modal fade" id="addToCartModal" tabindex="-1" aria-labelledby="addToCartModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addToCartModalLabel">Añadir al Carrito</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addToCartForm" method="POST" action="/addToCart">
+                        <input type="hidden" id="addToCartId" name="id_libro">
+                        <div class="mb-3">
+                            <label for="addToCartNombre" class="form-label">Nombre del Libro</label>
+                            <input type="text" class="form-control" id="addToCartNombre" name="nombre" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addToCartPrecio" class="form-label">Precio</label>
+                            <input type="text" class="form-control" id="addToCartPrecio" name="precio" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addToCartCantidad" class="form-label">Cantidad</label>
+                            <input type="number" class="form-control" id="addToCartCantidad" name="cantidad" min="1" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Añadir al Carrito</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>

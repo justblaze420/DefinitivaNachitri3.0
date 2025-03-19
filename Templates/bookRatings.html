@@ -5,17 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Libros con Ratings</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .user-comment {
+            background-color: rgba(13, 110, 253, 0.05);
+            border-left: 4px solid #0d6efd;
+        }
+        .rating-stars {
+            color: #ffc107;
+            font-size: 1.2rem;
+        }
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .comment-user {
+            display: flex;
+            align-items: center;
+        }
+        .comment-meta {
+            text-align: right;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="text-center">Libros con Ratings</h1>
-        <table class="table table-bordered table-striped">
+        <h1 class="text-center mb-4">Libros con Ratings</h1>
+        
+        <!-- Información del usuario -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Bienvenido, {{ session['nombre'] }}</h5>
+                        <p class="card-text text-muted">{{ session['mail'] }}</p>
+                    </div>
+                    <span class="badge bg-success">Sesión activa</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mensajes de flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <table class="table table-bordered table-hover">
             <thead class="bg-primary text-white">
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
                     <th>Rating Promedio</th>
-                    <th>Acciones</th>  <!-- Nueva columna -->
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,7 +75,20 @@
                     <td>{{ libro.nombre }}</td>
                     <td>
                         {% if libro.promedio_rating is not none and libro.promedio_rating > 0 %}
-                            {{ "%.2f"|format(libro.promedio_rating) }}
+                            <div class="d-flex align-items-center">
+                                <span class="rating-stars me-2">
+                                    {% for i in range(5) %}
+                                        {% if i < libro.promedio_rating|int %}
+                                            <i class="bi bi-star-fill"></i>
+                                        {% elif i < (libro.promedio_rating|float + 0.5)|int %}
+                                            <i class="bi bi-star-half"></i>
+                                        {% else %}
+                                            <i class="bi bi-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                                <span class="ms-2">{{ "%.2f"|format(libro.promedio_rating) }}</span>
+                            </div>
                         {% else %}
                             <span class="text-danger">Sin ratings</span>
                         {% endif %}
@@ -33,7 +96,11 @@
                     <td>
                         <!-- Botón para abrir el modal -->
                         <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#ratingModal{{ libro.id_libro }}">
-                            Agregar Rating
+                            {% if libro.ids_usuarios and session['user_id']|string in libro.ids_usuarios %}
+                                <i class="bi bi-pencil-square me-1"></i> Editar mi Rating
+                            {% else %}
+                                <i class="bi bi-plus-circle me-1"></i> Agregar Rating
+                            {% endif %}
                         </button>
             
                         <!-- Modal para ingresar el rating -->
@@ -41,19 +108,34 @@
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title">Agregar Rating a {{ libro.nombre }}</h5>
+                                        <h5 class="modal-title">
+                                            {% if libro.ids_usuarios and session['user_id']|string in libro.ids_usuarios %}
+                                                <i class="bi bi-pencil-square"></i> Editar Rating de {{ libro.nombre }}
+                                            {% else %}
+                                                <i class="bi bi-plus-circle"></i> Agregar Rating a {{ libro.nombre }}
+                                            {% endif %}
+                                        </h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <form method="POST" action="{{ url_for('bookRating') }}">
                                         <div class="modal-body">
                                             <input type="hidden" name="id_libro" value="{{ libro.id_libro }}">
-                                            <label for="rating" class="form-label">Calificación (1-5)</label>
-                                            <input type="number" class="form-control" name="rating" min="1" max="5" required>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="submit" class="btn btn-primary">Guardar</button>
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                        </div>
+                                            <div class="mb-3">
+                                                <label for="rating" class="form-label">Calificación (1-5)</label>
+                                                <div class="d-flex">
+                                                    <input type="range" class="form-range" name="rating" min="1" max="5" required id="ratingRange{{ libro.id_libro }}" oninput="updateRatingValue(this.value, {{ libro.id_libro }})">
+                                                    <span class="ms-3 rating-value" id="ratingValue{{ libro.id_libro }}">3</span>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="comentario" class="form-label">Comentario</label>
+                                                <textarea class="form-control" name="comentario" rows="3" required></textarea>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                            </div>
+                                        </div> 
                                     </form>
                                 </div>
                             </div>
@@ -63,9 +145,64 @@
                 {% endfor %}
             </tbody>
         </table>
+        
+        <!-- Sección de comentarios -->
+        <div class="container mt-4">
+            {% for libro in libros %}
+                {% if libro.comentarios and libro.comentarios|length > 0 %}
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h4>Comentarios para "{{ libro.nombre }}"</h4>
+                        </div>
+                        <div class="card-body">
+                            {% for comentario in libro.comentarios %}
+                                <div class="border-bottom pb-3 mb-3 {% if comentario.es_propio %}user-comment{% endif %}">
+                                    <div class="comment-header">
+                                        <div class="comment-user">
+                                            <i class="bi bi-person-circle me-2"></i>
+                                            <strong>{{ comentario.usuario }}</strong>
+                                            {% if comentario.es_propio %}
+                                                <span class="badge bg-primary ms-2">Tú</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="comment-meta">
+                                            <div class="rating-stars">
+                                                {% for i in range(5) %}
+                                                    {% if i < comentario.rating|int %}
+                                                        <i class="bi bi-star-fill"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <small class="text-muted">{{ comentario.fecha }}</small>
+                                        </div>
+                                    </div>
+                                    <p class="card-text">{{ comentario.comentario }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
     </div>
 
     <!-- Incluir Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateRatingValue(val, libroId) {
+            document.getElementById('ratingValue' + libroId).textContent = val;
+        }
+        
+        // Inicializar los valores de rating al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            const ratingRanges = document.querySelectorAll('[id^="ratingRange"]');
+            ratingRanges.forEach(range => {
+                const libroId = range.id.replace('ratingRange', '');
+                updateRatingValue(range.value, libroId);
+            });
+        });
+    </script>
 </body>
 </html>
