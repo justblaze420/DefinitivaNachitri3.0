@@ -1,4 +1,4 @@
-from connection_db import get_db_connection, secret_key
+from connection_db import get_db_connection, secret_key, correoConfirmacion, init_mail
 from flask import Flask, jsonify, render_template, request, flash, redirect, url_for, session
 import mysql.connector 
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,23 +6,23 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = secret_key()
-app.permanent_session_lifetime = timedelta(minutes=30)  # Expira después de 30 minutos de inactividad
+app.permanent_session_lifetime = timedelta(days=7)  # Expira después de 30 minutos de inactividad
+init_mail(app)
 
 @app.before_request
 def make_session_permanent():
-    session.permanent = True
-    
+    session.permanent = True 
 #redirige a la pagina que muestra los usuarios
 @app.route('/usuarios')
 def showUsers():
     return render_template('showUsers.html')
 
 @app.route('/confimation')
-def confirmacion():
+def confirmation():
     if not session.get('user_id'):
         flash("Debes iniciar sesión para ver esta página.", "warning")
         return redirect(url_for('loginPage'))
-    return render_template('confirmacion.html', id_venta=request.args.get('id_venta'))
+    return render_template('confirmation.html', id_venta=request.args.get('id_venta'))
 
 @app.route('/checkout')
 def readCheckout():
@@ -721,27 +721,33 @@ def removeFromCart():
 
 @app.route('/payment', methods=['POST'])
 def payProcedure():
+    correo_usuario = session.get('mail')
     id_usuario = session.get('user_id')
-    if not id_usuario:
+
+    if not id_usuario or not correo_usuario:
         flash('Debes iniciar sesión para realizar la compra.', 'warning')
         return redirect(url_for('loginPage'))
-    
+        
     conexion = get_db_connection()
     cursor = conexion.cursor()
 
     try:
-        # Llamar al stored procedure
+
         cursor.callproc('sp_procesar_pago', (id_usuario,))
 
         # Obtener el resultado
         resultado = None
         for result in cursor.stored_results():
-            resultado = result.fetchone()
+            resultado = result.fetchone()           
 
         # Verificar si resultado tiene datos
         if resultado:
-            mensaje, id_venta, total = resultado # 'Pago procesado con éxito'
+            mensaje, id_venta, total = resultado  
             conexion.commit()
+
+            # Enviar correo de confirmación
+            correoConfirmacion(correo_usuario, id_venta, total)
+
             flash(f'{mensaje} Total: ${total:.2f}', 'success')
             return redirect(url_for('confirmation', id_venta=id_venta))
         
@@ -754,7 +760,29 @@ def payProcedure():
         conexion.close()
 
     return redirect(url_for('cart'))
- 
+
+@app.route('/test_email')
+def test_email():
+    # Imprimir las credenciales de Flask-Mail (¡Cuidado con exponer la contraseña!)
+    print("Credenciales de Flask-Mail:")
+    print(f"MAIL_SERVER: {app.config.get('MAIL_SERVER')}")
+    print(f"MAIL_PORT: {app.config.get('MAIL_PORT')}")
+    print(f"MAIL_USE_TLS: {app.config.get('MAIL_USE_TLS')}")
+    print(f"MAIL_USERNAME: {app.config.get('MAIL_USERNAME')}")
+    print(f"MAIL_PASSWORD: {'*' * len(app.config.get('MAIL_PASSWORD', ''))}")  # Oculta la contraseña
+    print(f"MAIL_DEFAULT_SENDER: {app.config.get('MAIL_DEFAULT_SENDER')}")
+
+    # Imprimir el contenido de la sesión
+    print("Contenido de la sesión:", session)
+
+    # Enviar un correo de prueba
+    print('Enviando correo de prueba...')
+    try:
+        correoConfirmacion('dmnstrdrslibrary@gmail.com', id_venta=12345, total=100.00)
+        return "Correo de prueba enviado. Revisa la consola para ver las credenciales."
+    except Exception as e:
+        print(f"Error al enviar el correo: {e}")
+        return f"Error al enviar el correo: {e}"
 
 
 if __name__ == '__main__':

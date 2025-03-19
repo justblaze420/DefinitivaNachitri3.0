@@ -67,7 +67,7 @@ ALTER TABLE libros ADD COLUMN precio DECIMAL(10,2) NOT NULL DEFAULT 0.00;
 ALTER TABLE libros 
 MODIFY fecha_pub DATETIME DEFAULT CURRENT_TIMESTAMP;
 
-
+drop
 
 CREATE TABLE ratings (
     id_rating INT AUTO_INCREMENT PRIMARY KEY,
@@ -79,6 +79,18 @@ CREATE TABLE ratings (
     FOREIGN KEY (idLibro) REFERENCES libros(id_libro) ON DELETE CASCADE,
     FOREIGN KEY (idUsuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
+
+INSERT INTO ratings (idLibro, idUsuario, comentario, rating) VALUES
+(1, 14, '¡Un clásico imprescindible!', 5),
+(2, 15, 'Me encantó la trama y los personajes.', 4),
+(3, 16, 'Un libro que te hace reflexionar.', 5),
+(4, 17, 'No pude parar de leerlo.', 4),
+(5, 14, 'Una historia conmovedora.', 5),
+(6, 14, 'Muy entretenido y fácil de leer.', 4),
+(7, 17, 'Un thriller que te atrapa desde el principio.', 5),
+(8, 16, 'Una aventura épica.', 4),
+(9, 14, 'Un libro que te cambia la vida.', 5),
+(10, 15, 'Una joya de la literatura infantil.', 5);
 
 ALTER TABLE ratings ADD CONSTRAINT unique_user_book_rating UNIQUE (idLibro, idUsuario);
 
