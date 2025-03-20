@@ -371,7 +371,7 @@ BEGIN
             l.nombre AS titulo,  -- Cambiado de titulo a nombre
             l.autor,
             l.genero,            -- Agregado género
-            l.ano_publicacion,   -- Agregado año de publicación
+            l.ano_publicacion,   --      año de publicación
             ci.cantidad,
             ci.precio_unitario,
             (ci.cantidad * ci.precio_unitario) AS subtotal,

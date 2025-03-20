@@ -119,6 +119,9 @@ def loginPage():
             flash("Todos los datos deben ser ingresados", "error")
             return render_template('login.html')
 
+        conn = None
+        cursor = None  
+
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
