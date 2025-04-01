@@ -83,11 +83,6 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="direccion" class="form-label">Dirección:</label>
-                                <input type="text" class="form-control" id="direccion" name="direccion" value="{{ direccion }}" required>
-                            </div>
-
-                            <div class="mb-3">
                                 <label for="telefono" class="form-label">Teléfono:</label>
                                 <input type="tel" class="form-control" id="telefono" name="telefono" value="{{ telefono }}" required>
                             </div>
@@ -98,11 +93,16 @@
                         </form>
                     </div>
 
+                    <div class="container mt-4">
+                        <div class="text-center">
+                            <a href="/indexPage" class="btn btn-secondary">Volver al Inicio</a>
+                    </div>
+                   
+
                     <!-- Pestaña de Seguridad -->
                     <div class="tab-pane fade" id="seguridad" role="tabpanel">
                         <form method="POST" action="{{ url_for('userConfig') }}" class="mt-3">
                             <input type="hidden" name="nombre" value="{{ nombre }}">
-                            <input type="hidden" name="direccion" value="{{ direccion }}">
                             <input type="hidden" name="telefono" value="{{ telefono }}">
 
                             <div class="mb-3">
@@ -129,8 +129,13 @@
             </div>
         </div>
     </div>
+    <!-- Botón de Volver al Inicio -->
+    <div class="container mt-4">
+        <div class="text-center">
+            <a href="/indexPage" class="btn btn-secondary">Volver al Inicio</a>
+        </div>
 
-    <!-- Bootstrap y FontAwesome -->
+        <!-- Bootstrap y FontAwesome -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

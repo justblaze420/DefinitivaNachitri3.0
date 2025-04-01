@@ -11,28 +11,15 @@
     <div class="container mt-5">
         <div class="jumbotron text-center bg-white shadow-lg p-5 rounded">
             <h1 class="display-4">Empire Library</h1>
-            <p class="lead">Bienvenido <strong>{{ session['nombre'] }}</strong> a la biblioteca virtual alternativa a Z-Library</p>
+            <p class="lead">Bienvenido <strong>{{ nombre }}</strong> a la biblioteca virtual alternativa a Z-Library</p>
             <hr class="my-4">
 
-            {% if session['rol'] == 'Admin' %}
-                <p class="text-muted">Opciones de administrador</p>
-                <div class="d-grid gap-3 col-6 mx-auto">
-                    <a href="/readUsers" class="btn btn-primary btn-lg">Mostrar Usuarios</a>
-                    <a href="/readBooks" class="btn btn-success btn-lg">Mostrar Libros</a>
-                    <a href="/bookRatings" class="btn btn-warning btn-lg">Ratings de los Libros</a>
-                </div>
-            
-            {% elif session['rol'] != 'Admin' %}
-                <p class="text-muted">Opciones de usuario</p>
-                <div class="d-grid gap-3 col-6 mx-auto">
-                    <a href="/readBooks" class="btn btn-success btn-lg">Ver Libros</a>
-                    <a href="/userConfig" class="btn btn-info btn-lg">Configuraciones de Usuario</a>
-                    <a href="/bookRatings" class="btn btn-warning btn-lg">Ratings de los Libros</a>
-                </div>
-
-            {% else %}
-                <p class="text-danger">No tienes acceso a esta página.</p>
-            {% endif %}
+            <p class="text-muted">{{ options.title }}</p>
+            <div class="d-grid gap-3 col-6 mx-auto">
+                {% for button in options.buttons %}
+                    <a href="{{ button.url }}" class="{{ button.class }}">{{ button.text }}</a>
+                {% endfor %}
+            </div>
 
             <hr class="my-4">
             <a href="/logout" class="btn btn-danger btn-lg">Cerrar Sesión</a>

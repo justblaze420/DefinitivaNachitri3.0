@@ -57,6 +57,21 @@
 }
 
     </script>
+<script>
+    document.getElementById("stock").addEventListener("input", function() {
+        if (this.value < 0) {
+            this.value = 0;
+        }
+    });
+</script>
+
+<script>
+    document.getElementById("editstock").addEventListener("input", function() {
+        if (this.value < 0) {
+            this.value = 0;
+        }
+    });
+</script>
 </head>
 <body>
 
@@ -95,15 +110,15 @@
                     <div class="mb-3">
                         <label for="ano_publicacion" class="form-label">Año de Publicación</label>
                         <input type="number" class="form-control" id="ano_publicacion" name="ano_publicacion" min="1800"
-                            max="2023" required>
+                            max="2025" required>
                     </div>
                     <div class="mb-3">
                         <label for="stock" class="form-label">Stock</label>
-                        <input type="number" class="form-control" id="stock" name="stock" min="0" required>
+                        <input type="number" class="form-control" id="stock" name="stock" min="0"   required >
                     </div>
                     <div class="mb-3">
                         <label for="precio" class="form-label">Precio</label>
-                        <input type="number" class="form-control" id="precio" name="precio" min="0" required>
+                        <input type="number" step= "0.01" class="form-control" id="precio" name="precio" min="0" required>
                     </div>
                     <div class="mb-3">
                         <label for="genero" class="form-label">Género</label>
@@ -217,11 +232,11 @@
                         </div>
                         <div class="mb-3">
                             <label for="editStock" class="form-label">Stock</label>
-                            <input type="number" class="form-control" id="editStock" name="stock" required>
+                            <input type="number" class="form-control" id="editStock" name="stock" min= "0" required>
                         </div>
                         <div class="mb-3">
                             <label for="editPrecio" class="form-label">Precio</label>
-                            <input type="number" class="form-control" id="editPrecio" name="precio" required>
+                            <input type="number" step= "0.01" class="form-control" id="editPrecio" name="precio" required>
                         </div>
                         <div class="mb-3">
                             <label for="editGenero" class="form-label">Género</label>

@@ -1,0 +1,28 @@
+roles:
+  Admin:
+    buttons:
+    - class: btn btn-primary btn-lg
+      text: Añadir gente Prueba de dque funciona
+      url: /readUsers
+    - class: btn btn-success btn-lg
+      text: Mostrar Libros
+      url: /readBooks
+    - class: btn btn-warning btn-lg
+      text: Ratings de los Libros
+      url: /bookRatings
+    - class: btn btn-info btn-lg
+      text: Editar botones de panel
+      url: /editButtons
+    title: Opciones de administrador
+  User:
+    buttons:
+    - class: btn btn-success btn-lg
+      text: Ver Libros
+      url: /readBooks
+    - class: btn btn-info btn-lg
+      text: Configuraciones de Usuario
+      url: /userConfig
+    - class: btn btn-warning btn-lg
+      text: Ratings de los Libros
+      url: /bookRatings
+    title: Opciones de usuario

@@ -73,11 +73,14 @@
                     </div>
                     <div class="mb-3">
                         <label for="rol" class="form-label">Rol</label>
-                        <input type="text" class="form-control" id="rol" name="rol" required>
+                        <select class="form-control" id="editEstado" name="estado" required>
+                            <option value="rol">Admin</option>
+                            <option value="rol">Usuario</option>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="telefono" class="form-label">Teléfono</label>
-                        <input type="text" class="form-control" id="telefono" name="telefono" required>
+                        <input type="number" class="form-control" id="telefono" name="telefono" required>
                     </div>
                     <div class="mb-3">
                         <label for="mail" class="form-label">Correo Electrónico</label>
@@ -101,7 +104,6 @@
                     <th>Rol</th>
                     <th>Teléfono</th>
                     <th>Correo</th>
-                    <th>Dirección</th>
                     <th>Contraseña</th>
                     <th>Acciones</th>
                     
@@ -152,7 +154,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="editTelefono" class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" id="editTelefono" name="telefono" required>
+                            <input type="number" class="form-control" id="editTelefono" name="telefono" required>
                         </div>
                         <div class="mb-3">
                             <label for="editMail" class="form-label">Correo Electrónico</label>

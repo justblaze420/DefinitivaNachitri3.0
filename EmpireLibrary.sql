@@ -37,6 +37,10 @@ CREATE TABLE venta_detalle (
     FOREIGN KEY (id_libro) REFERENCES libros(id_libro)
 );
 
+UPDATE libros SET precio = 9.99 WHERE precio = 10.00;
+UPDATE libros SET stock = 10 WHERE stock <= 0;
+SELECT * FROM libros WHERE precio <= 0
+
 create table libros(
 id_libro int auto_increment primary key,
 nombre varchar(50),

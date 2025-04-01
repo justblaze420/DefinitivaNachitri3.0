@@ -3,11 +3,57 @@ from flask import Flask, jsonify, render_template, request, flash, redirect, url
 import mysql.connector 
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
+import yaml
+import paypalrestsdk
 
 app = Flask(__name__)
 app.secret_key = secret_key()
 app.permanent_session_lifetime = timedelta(days=7)  # Expira después de 30 minutos de inactividad
 init_mail(app)
+
+
+paypalrestsdk.configure({
+  "mode": "sandbox", 
+  "client_id": "ARru0Hz2NyklIJYv6_oODvFGf-E9X4tpqrXZoofYBlzauBt8RQ7amAhYpKgWl6ohSvzU3yHc8XSTGpWL",
+  "client_secret": "EJi8zhgcyayb099eOLGT_yTWHXfnI59MsAYZ0Q3l-km0f4lwGejLErqtVsnWeFg4P6H9PW4rf_uBgYwR" })
+
+# Función para cargar YAML
+def load_buttons():
+    with open("buttons.yaml", "r", encoding="utf-8") as file:
+        return yaml.safe_load(file)
+    
+# Función para guardar cambios en YAML
+def save_buttons(config):
+    with open("buttons.yaml", "w", encoding="utf-8") as file:
+        yaml.dump(config, file, default_flow_style=False, allow_unicode=True)
+
+@app.route('/editButtons', methods=['GET'])
+def editButtons():
+    if 'rol' not in session or session['rol'] != 'Admin':
+        flash("No tienes permisos para acceder a esta página.", "error")
+        return redirect(url_for('indexPage'))
+    
+    buttons_config = load_buttons()
+    return render_template('bottoms.html', buttons_config=buttons_config)
+
+@app.route('/update_buttons', methods=['POST'])
+def update_buttons():
+    if 'rol' not in session or session['rol'] != 'Admin':
+        flash("No tienes permisos para realizar esta acción.", "error")
+        return redirect(url_for('indexPage'))
+
+    buttons_config = load_buttons()
+
+    for role in buttons_config['roles']:
+        for i, button in enumerate(buttons_config['roles'][role]['buttons']):
+            button['text'] = request.form.get(f"{role}_text_{i}")
+            button['url'] = request.form.get(f"{role}_url_{i}")
+            button['class'] = request.form.get(f"{role}_class_{i}")
+
+    save_buttons(buttons_config)
+    flash("Botones actualizados correctamente.", "success")
+    
+    return redirect(url_for('editButtons'))
 
 @app.before_request
 def make_session_permanent():
@@ -26,6 +72,11 @@ def confirmation():
 
 @app.route('/checkout')
 def readCheckout():
+    id_usuario = session.get('user_id')  # Verificamos si el usuario está logueado
+    if not id_usuario:
+        flash('Debes iniciar sesión para ver tu carrito.', 'warning')
+        return redirect(url_for('loginPage'))
+    
     id_usuario = session.get('user_id')
    
     if not id_usuario:
@@ -79,8 +130,11 @@ def indexPage():
     if 'mail' not in session:
         flash("Debes iniciar sesión para acceder a esta página.", "error")
         return redirect(url_for('loginPage'))
+    
+    buttons_config = load_buttons()
+    options = buttons_config["roles"].get(session['rol'], buttons_config["roles"]["User"])
 
-    return render_template('indexPage.html', nombre=session['nombre'])
+    return render_template('indexPage.html', nombre=session['nombre'], options=options)
 
 @app.route('/logout')
 def logout():
@@ -193,6 +247,10 @@ def createUsers():
 #Funcion que muestra a los usuarios
 @app.route('/readUsers',methods=['GET'])
 def readUsers():
+    id_usuario = session.get('user_id')  # Verificamos si el usuario está logueado
+    if not id_usuario:
+        flash('Debes iniciar sesión para ver tu carrito.', 'warning')
+        return redirect(url_for('loginPage'))
     
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -318,6 +376,11 @@ def createBook():
 
 @app.route('/readBooks', methods=['GET'])
 def readBooks():    
+    id_usuario = session.get('user_id')  # Verificamos si el usuario está logueado
+    if not id_usuario:
+        flash('Debes iniciar sesión para ver tu carrito.', 'warning')
+        return redirect(url_for('loginPage'))
+    
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     libros = []
@@ -409,6 +472,11 @@ def updateBook():
 
 @app.route('/userConfig', methods=['GET','POST'])
 def userConfig():
+    id_usuario = session.get('user_id')  # Verificamos si el usuario está logueado
+    if not id_usuario:
+        flash('Debes iniciar sesión para ver tu carrito.', 'warning')
+        return redirect(url_for('loginPage'))
+
     if 'mail' not in session:
         flash("Debe iniciar sesión primero", "error")
         return redirect(url_for('loginPage'))
@@ -493,7 +561,6 @@ def bookRatings():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         
-        # Ejecutar una consulta directa en lugar del procedimiento almacenado
         cursor.execute("""
             SELECT
                 libros.id_libro,
@@ -507,7 +574,6 @@ def bookRatings():
             FROM libros
             LEFT JOIN ratings ON libros.id_libro = ratings.idLibro
             LEFT JOIN usuario ON ratings.idUsuario = usuario.id_usuario
-            WHERE ratings.id_rating IS NOT NULL
             GROUP BY libros.id_libro
         """)
         
@@ -658,6 +724,11 @@ def addToCart():
 
 @app.route('/checkout', methods=['POST'])
 def checkoutProcedur():
+    id_usuario = session.get('user_id')  # Verificamos si el usuario está logueado
+    if not id_usuario:
+        flash('Debes iniciar sesión para ver tu carrito.', 'warning')
+        return redirect(url_for('loginPage'))
+    
     id_usuario = session.get('user_id')
     if not id_usuario:
         flash('Debes iniciar sesión para realizar la compra.', 'warning')
@@ -763,6 +834,86 @@ def payProcedure():
         conexion.close()
 
     return redirect(url_for('cart'))
+
+@app.route('/create_payment', methods=['POST'])
+def create_payment():
+    correo_usuario = session.get('mail')
+    id_usuario = session.get('user_id')
+
+    if not id_usuario or not correo_usuario:
+        flash('Debes iniciar sesión para realizar la compra.', 'warning')
+        return redirect(url_for('loginPage'))
+
+    conexion = get_db_connection()
+    cursor = conexion.cursor()
+
+    try:
+        cursor.callproc('sp_procesar_pago', (id_usuario,))
+        
+        resultado = None
+        for result in cursor.stored_results():
+            resultado = result.fetchone()  
+
+        if resultado:
+            mensaje, id_venta, total = resultado  
+            conexion.commit()
+            
+            payment = paypalrestsdk.Payment({
+                "intent": "sale",
+                "payer": {
+                    "payment_method": "paypal"
+                },
+                "redirect_urls": {
+                    "return_url": url_for('execute_payment', id_venta=id_venta, _external=True),
+                    "cancel_url": url_for('cart', _external=True)
+                },
+                "transactions": [{
+                    "amount": {
+                        "total": f"{total:.2f}",
+                        "currency": "USD"
+                    },
+                    "description": f"Pago de carrito ID: {id_venta}"
+                }]
+            })
+
+            if payment.create():
+                for link in payment.links:
+                    if link.rel == "approval_url":
+                        return redirect(link.href)  # Redirige a PayPal
+            else:
+                flash("Error al crear el pago en PayPal", "danger")
+
+    except mysql.connector.Error as e:
+        conexion.rollback()
+        flash(f'Error al procesar el pago: {str(e)}', 'danger')
+
+    finally:
+        cursor.close()
+        conexion.close()
+
+    return redirect(url_for('cart'))
+
+@app.route('/execute_payment', methods=['GET'])
+def execute_payment():
+    payment_id = request.args.get('paymentId')
+    payer_id = request.args.get('PayerID')
+    id_venta = request.args.get('id_venta')
+
+    payment = paypalrestsdk.Payment.find(payment_id)
+
+    if payment.execute({"payer_id": payer_id}):
+        flash("Pago realizado con éxito", "success")
+        
+        correo_usuario = session.get('mail')
+        total = float(payment.transactions[0]['amount']['total'])  # Convertir a número
+        correoConfirmacion(correo_usuario, id_venta, total)
+
+        return redirect(url_for('confirmation', id_venta=id_venta))
+    else:
+        flash("Error al procesar el pago en PayPal", "danger")
+        return redirect(url_for('cart'))    
+
+
 
 @app.route('/test_email')
 def test_email():

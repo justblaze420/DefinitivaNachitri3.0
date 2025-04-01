@@ -39,6 +39,7 @@ init_mail(app)
 
 def correoConfirmacion(destinatario, id_venta, total):
     asunto = 'Confirmación de Compra'
+    total = float(total)
     cuerpo = f'''
     Gracias por tu compra.
     
